@@ -7,6 +7,8 @@
 #include "Engine/TriggerVolume.h"
 #include "OpenDoor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOpenRequest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCloseRequest);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UE4BUILDINGESCAPE_API UOpenDoor : public UActorComponent
@@ -21,32 +23,35 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void OpenDoor();
-	void CloseDoor();
-
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	void OpenDoor();
+	void CloseDoor();
+
+	UPROPERTY(BlueprintAssignable)
+	FOnOpenRequest OnOpenRequest;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnCloseRequest OnCloseRequest;
+
 private:
 
 	UPROPERTY(EditAnywhere)
-	float OpenAngle = 90.0f;
+	ATriggerVolume* PressurePlate = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	ATriggerVolume* PressurePlate;
+	float PressurePlateMassToOpen = 40.0f;
 
-	UPROPERTY(EditAnywhere)
-	float CloseDelay = 0.5f;
-
-	FRotator InitialRotation;
-
-	AActor* ActorThatOpens;
-	AActor* OwningActor;
+	AActor* OwningActor = nullptr;
 
 	UFUNCTION()
 	void OnOpenDoor(AActor* ThisActor, AActor* OtherActor);
 
 	UFUNCTION()
 	void OnCloseDoor(AActor* ThisActor, AActor* OtherActor);
+
+	// Return the total mass of collaspable Actors on PressurePlate
+	float GetTotalMassOfActorsOnPlate();
 };
